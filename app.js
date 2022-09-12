@@ -1,3 +1,4 @@
+require("dotenv").config()
 const express = require("express");
 const bodyParser =require("body-parser");
 const ejs = require("ejs");
@@ -5,6 +6,8 @@ const mongoose = require("mongoose");
 const encrypt = require("mongoose-encryption")
 
 const app = express();
+
+
 
 app.use(express.static("public"));//to use public folder
 app.use(bodyParser.urlencoded({extended: true}));
@@ -18,8 +21,8 @@ const userDataSchema = new mongoose.Schema({
   password:String
 });
 
-const secret = "This_is_not_secret.";
-userDataSchema.plugin(encrypt,{secret:secret , encryptedField:["password"]});//imp add plugin to schema before mongoose model
+
+userDataSchema.plugin(encrypt,{secret:process.env.SECRET , encryptedField:["password"]});//imp add plugin to schema before mongoose model
 //it is to encrypt the data;
 
 const User = mongoose.model("User", userDataSchema);
