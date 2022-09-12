@@ -2,7 +2,7 @@ const express = require("express");
 const bodyParser =require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
-
+const encrypt = require("mongoose-encryption")
 
 const app = express();
 
@@ -13,10 +13,14 @@ app.set('view engine','ejs');
 mongoose.connect("mongodb://localhost:27017/userDB");
 
 
-const userDataSchema = {
+const userDataSchema = new mongoose.Schema({
   email:String,
   password:String
-};
+});
+
+const secret = "This_is_not_secret.";
+userDataSchema.plugin(encrypt,{secret:secret , encryptedField:["password"]});//imp add plugin to schema before mongoose model
+//it is to encrypt the data;
 
 const User = mongoose.model("User", userDataSchema);
 
