@@ -38,7 +38,8 @@ const userDataSchema = new mongoose.Schema({
   email: String,
   password: String,
   googleId:String,
-  facebookId:String
+  facebookId:String,
+  secret:String
 });
 // step3
 userDataSchema.plugin(passportLocalMongoose); //here we hase&salt passport & save to mongoose & it is after the schema
@@ -47,7 +48,7 @@ userDataSchema.plugin(findOrCreate);
 const User = mongoose.model("User", userDataSchema);
 
 //passport-local config start & it will be just below the model.//it's a local Strategy
-// passport.use(User.createStrategy());
+passport.use(User.createStrategy());
 //
 // passport.serializeUser(User.serializeUser()); //it is use to create cookies.
 // passport.deserializeUser(User.deserializeUser()); //it is use to destroy cookies.
@@ -67,6 +68,8 @@ passport.deserializeUser(function(user, cb) {
     return cb(null, user);
   });
 });
+
+
 
 passport.use(new GoogleStrategy({
     clientID: process.env.CLIENT_ID,
@@ -129,13 +132,43 @@ app.get('/auth/facebook/secrets',
 });
 
 app.get("/secrets", function(req, res) {
+  User.find({"secret": {$ne: null}},function(err,foundUsers){
+    if (err) {
+      console.log(err);
+    } else {
+      if(foundUsers){
+        res.render("secrets",{userWithSecrets:foundUsers});
+      }
+    }
+  });
+});
+
+app.get("/submit",function(req,res){
   if (req.isAuthenticated()) {
-    res.render("secrets");
+    res.render("submit");
   } else {
     res.redirect("/login");
   }
 });
 
+app.post("/submit",function(req,res){
+
+  const submittedSecret = req.body.secret;
+
+  User.findById(req.user.id, function(err, foundUser){
+    if(err){
+      console.log(err);
+
+    }else{
+      if(foundUser){
+        foundUser.secret = submittedSecret;
+        foundUser.save(function(){
+          res.redirect("/secrets");
+        });
+      }
+    }
+  });
+});
 
 app.get("/logout",function(req,res){
   req.logout(function(err) {
